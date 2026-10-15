@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.github.mschwehl</groupId>
+    <artifactId>bb-secret-validator</artifactId>
+    <version>${revision}</version>
+    <packaging>atlassian-plugin</packaging>
+
+    <name>Git-Crypt Secret Validator</name>
+    <description>A Bitbucket Data Center pre-receive hook that validates git-crypt encrypted files. Rejects pushes containing unencrypted files in secret paths.</description>
+    <url>https://github.com/mschwehl/bb-secret-validator</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>mschwehl</id>
+            <name>Martin Schwehla</name>
+            <url>https://github.com/mschwehl</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/mschwehl/bb-secret-validator.git</connection>
+        <developerConnection>scm:git:https://github.com/mschwehl/bb-secret-validator.git</developerConnection>
+        <url>https://github.com/mschwehl/bb-secret-validator</url>
+    </scm>
+
+    <properties>
+        <revision>0-SNAPSHOT</revision>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+
+        <bitbucket.version>10.2.8</bitbucket.version>
+        <bitbucket.data.version>10.2.8</bitbucket.data.version>
+        <amps.version>9.12.5</amps.version>
+
+        <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
+        <atlassian.spring.scanner.version>5.0.2</atlassian.spring.scanner.version>
+        <jakarta.inject.version>2.0.1</jakarta.inject.version>
+        <plugin.testrunner.version>2.0.2</plugin.testrunner.version>
+        <bitbucket.home>${project.build.directory}/bitbucket/home</bitbucket.home>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.atlassian.bitbucket.server</groupId>
+                <artifactId>bitbucket-parent</artifactId>
+                <version>${bitbucket.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.hrakaroo</groupId>
+            <artifactId>glob</artifactId>
+            <version>0.9.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.sal</groupId>
+            <artifactId>sal-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.bitbucket.server</groupId>
+            <artifactId>bitbucket-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.bitbucket.server</groupId>
+            <artifactId>bitbucket-spi</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.bitbucket.server</groupId>
+            <artifactId>bitbucket-page-objects</artifactId>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.seleniumhq.selenium</groupId>
+                    <artifactId>selenium-ie-driver</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.seleniumhq.selenium</groupId>
+                    <artifactId>selenium-safari-driver</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <version>${jakarta.inject.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.plugin</groupId>
+            <artifactId>atlassian-spring-scanner-annotation</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugin</groupId>
+            <artifactId>atlassian-spring-scanner-runtime</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugins</groupId>
+            <artifactId>atlassian-plugins-osgi-testrunner</artifactId>
+            <version>${plugin.testrunner.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.atlassian.maven.plugins</groupId>
+                <artifactId>bitbucket-maven-plugin</artifactId>
+                <version>${amps.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <jvmArgs>-Xms1g -Xmx2g</jvmArgs>
+                    <products>
+                        <product>
+                            <id>bitbucket</id>
+                            <instanceId>bitbucket</instanceId>
+                            <version>${bitbucket.version}</version>
+                            <dataVersion>${bitbucket.data.version}</dataVersion>
+                            <httpPort>7990</httpPort>
+                            <systemPropertyVariables>
+                                <bitbucket.home>${bitbucket.home}</bitbucket.home>
+                                <bitbucket.search.disabled>true</bitbucket.search.disabled>
+                                <atlassian.upm.signature.check.disabled>true</atlassian.upm.signature.check.disabled>
+                            </systemPropertyVariables>
+                        </product>
+                    </products>
+                    <instructions>
+                        <Atlassian-Plugin-Key>${atlassian.plugin.key}</Atlassian-Plugin-Key>
+                        <Export-Package>
+                            io.github.mschwehl.bb.secretvalidator
+                        </Export-Package>
+                        <Import-Package>
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.atlassian.plugin</groupId>
+                <artifactId>atlassian-spring-scanner-maven-plugin</artifactId>
+                <version>${atlassian.spring.scanner.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>atlassian-spring-scanner</goal>
+                        </goals>
+                        <phase>process-classes</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <scannedDependencies>
+                        <dependency>
+                            <groupId>com.atlassian.plugin</groupId>
+                            <artifactId>atlassian-spring-scanner-external-jar</artifactId>
+                        </dependency>
+                    </scannedDependencies>
+                    <verbose>false</verbose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+    tags-ignore:
+      - '**'
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Configure Atlassian Maven repository
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml << 'XML'
+          <settings>
+            <profiles>
+              <profile>
+                <id>atlassian</id>
+                <repositories>
+                  <repository>
+                    <id>atlassian-external</id>
+                    <url>https://packages.atlassian.com/mvn/maven-atlassian-external/</url>
+                  </repository>
+                </repositories>
+                <pluginRepositories>
+                  <pluginRepository>
+                    <id>atlassian-external</id>
+                    <url>https://packages.atlassian.com/mvn/maven-atlassian-external/</url>
+                  </pluginRepository>
+                </pluginRepositories>
+              </profile>
+            </profiles>
+            <activeProfiles>
+              <activeProfile>atlassian</activeProfile>
+            </activeProfiles>
+          </settings>
+          XML
+
+      - name: Build and test
+        run: mvn -B clean package

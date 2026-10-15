@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:osgi="http://www.eclipse.org/gemini/blueprint/schema/blueprint"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+               http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.eclipse.org/gemini/blueprint/schema/blueprint
+               http://www.eclipse.org/gemini/blueprint/schema/blueprint/gemini-blueprint.xsd">
+
+    <osgi:reference id="commitService"
+                    interface="com.atlassian.bitbucket.commit.CommitService"/>
+
+    <osgi:reference id="contentService"
+                    interface="com.atlassian.bitbucket.content.ContentService"/>
+
+    <osgi:reference id="commitIndex"
+                    interface="com.atlassian.bitbucket.idx.CommitIndex"/>
+
+    <bean id="secretValidatorRepositoryHook"
+          class="io.github.mschwehl.bb.secretvalidator.SecretValidatorPreReceiveRepositoryHook">
+        <constructor-arg ref="commitService"/>
+        <constructor-arg ref="contentService"/>
+        <constructor-arg ref="commitIndex"/>
+    </bean>
+
+</beans>

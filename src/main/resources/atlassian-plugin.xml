@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<atlassian-plugin key="${project.groupId}.${project.artifactId}" name="${project.name}" plugins-version="2">
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="mschwehl" url="https://github.com/mschwehl"/>
+        <param name="plugin-icon">images/pluginIcon.png</param>
+        <param name="plugin-logo">images/pluginLogo.png</param>
+    </plugin-info>
+
+    <resource type="i18n" name="i18n" location="secret-validator-hook"/>
+
+    <web-resource key="secret-validator-hook-resources" name="secret-validator-hook Web Resources">
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <resource type="download" name="secret-validator-hook.css" location="/css/secret-validator-hook.css"/>
+        <resource type="download" name="secret-validator-hook.js" location="/js/secret-validator-hook.js"/>
+        <resource type="download" name="images/" location="/images"/>
+        <context>secret-validator-hook</context>
+    </web-resource>
+
+    <repository-hook name="Git-Crypt Secret Validator" i18n-name-key="secret-validator-hook.name"
+                     key="secret-validator-hook"
+                     class="bean:secretValidatorRepositoryHook">
+        <description key="secret-validator-hook.description">Rejects pushes containing unencrypted files in secret paths</description>
+        <icon>images/pluginIcon.png</icon>
+        <config-form name="Secret Validator Config" key="secret-validator-config">
+            <view>io.github.mschwehl.bb.secretvalidator.secretvalidatorprereceivehook.formContents</view>
+            <directory location="/static/"/>
+        </config-form>
+        <scopes>
+            <scope>project</scope>
+            <scope>repository</scope>
+        </scopes>
+        <validator>io.github.mschwehl.bb.secretvalidator.SecretPluginSettingsValidator</validator>
+    </repository-hook>
+
+</atlassian-plugin>
